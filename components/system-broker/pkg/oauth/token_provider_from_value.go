@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/kyma-incubator/compass/components/director/pkg/log"
 	httputils "github.com/kyma-incubator/compass/components/system-broker/pkg/http"
-	"github.com/kyma-incubator/compass/components/system-broker/pkg/log"
 )
 
 func NewTokenProviderFromValue(t string) *TokenProviderFromValue {

@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/kyma-incubator/compass/components/director/pkg/graphql/graphqlizer"
+	"github.com/kyma-incubator/compass/components/director/pkg/log"
 	"github.com/kyma-incubator/compass/components/system-broker/internal/config"
 	"github.com/kyma-incubator/compass/components/system-broker/internal/director"
 	"github.com/kyma-incubator/compass/components/system-broker/internal/osb"
@@ -29,11 +30,10 @@ import (
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/env"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/graphql"
 	httputil "github.com/kyma-incubator/compass/components/system-broker/pkg/http"
-	"github.com/kyma-incubator/compass/components/system-broker/pkg/log"
+	lagger "github.com/kyma-incubator/compass/components/system-broker/pkg/lager"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/oauth"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/server"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/signal"
-	"github.com/kyma-incubator/compass/components/system-broker/pkg/uuid"
 	gql "github.com/machinebox/graphql"
 )
 
@@ -57,15 +57,13 @@ func main() {
 	ctx, err = log.Configure(ctx, cfg.Log)
 	fatalOnError(err)
 
-	uuidSrv := uuid.NewService()
-
-	directorGraphQLClient, err := prepareGqlClient(cfg, uuidSrv)
+	directorGraphQLClient, err := prepareGqlClient(cfg)
 	fatalOnError(err)
 
 	systemBroker := osb.NewSystemBroker(directorGraphQLClient, cfg.Server.SelfURL+cfg.Server.RootAPI)
-	osbApi := osb.API(cfg.Server.RootAPI, systemBroker, log.NewDefaultLagerAdapter())
+	osbApi := osb.API(cfg.Server.RootAPI, systemBroker, lagger.NewDefaultLagerAdapter())
 	specsApi := specs.API(cfg.Server.RootAPI, directorGraphQLClient)
-	srv := server.New(cfg.Server, uuidSrv, osbApi, specsApi)
+	srv := server.New(cfg.Server, osbApi, specsApi)
 
 	srv.Start(ctx)
 }
@@ -76,9 +74,9 @@ func fatalOnError(err error) {
 	}
 }
 
-func prepareGqlClient(cfg *config.Config, uudSrv uuid.Service) (*director.GraphQLClient, error) {
+func prepareGqlClient(cfg *config.Config) (*director.GraphQLClient, error) {
 	// prepare raw http transport and http client based on cfg
-	httpTransport := httputil.NewCorrelationIDTransport(httputil.NewErrorHandlerTransport(httputil.NewHTTPTransport(cfg.HttpClient)), uudSrv)
+	httpTransport := httputil.NewCorrelationIDTransport(httputil.NewErrorHandlerTransport(httputil.NewHTTPTransport(cfg.HttpClient)))
 	httpClient := httputil.NewClient(cfg.HttpClient.Timeout, httpTransport)
 
 	oauthTokenProvider, err := oauth.NewTokenProvider(cfg.OAuthProvider, httpClient)
