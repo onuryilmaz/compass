@@ -24,9 +24,8 @@ import (
 	"github.com/gavv/httpexpect"
 	"github.com/kyma-incubator/compass/components/system-broker/internal/config"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/env"
-	sblog "github.com/kyma-incubator/compass/components/system-broker/pkg/log"
+	sblog "github.com/kyma-incubator/compass/components/system-broker/pkg/lager"
 	"github.com/kyma-incubator/compass/components/system-broker/pkg/server"
-	"github.com/kyma-incubator/compass/components/system-broker/pkg/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -191,7 +190,7 @@ func newSystemBrokerServer(sbEnv env.Environment) FakeServer {
 	systemBroker := osb.NewSystemBroker(directorGraphQLClient, cfg.Server.SelfURL+cfg.Server.RootAPI)
 	osbApi := osb.API(cfg.Server.RootAPI, systemBroker, sblog.NewDefaultLagerAdapter())
 	specsApi := specs.API(cfg.Server.RootAPI, directorGraphQLClient)
-	sbServer := server.New(cfg.Server, uuid.NewService(), osbApi, specsApi)
+	sbServer := server.New(cfg.Server, osbApi, specsApi)
 
 	sbServer.Addr = "localhost:" + strconv.Itoa(cfg.Server.Port) // Needed to avoid annoying macOS permissions popup
 

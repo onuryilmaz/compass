@@ -2,11 +2,12 @@ package binding_test
 
 import (
 	"fmt"
-	schema "github.com/kyma-incubator/compass/components/director/pkg/graphql"
-	"github.com/kyma-incubator/compass/components/system-broker/internal/osb"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	schema "github.com/kyma-incubator/compass/components/director/pkg/graphql"
+	"github.com/kyma-incubator/compass/components/system-broker/internal/osb"
 
 	"github.com/stretchr/testify/assert"
 
