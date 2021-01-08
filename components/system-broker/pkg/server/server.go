@@ -19,6 +19,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/kyma-incubator/compass/components/director/pkg/correlation"
+	"github.com/kyma-incubator/compass/components/director/pkg/handler"
 	"net/http"
 	"net/http/pprof"
 	"strconv"
@@ -46,6 +48,7 @@ func New(c *Config, routesProvider ...func(router *mux.Router)) *Server {
 	}
 
 	router := mux.NewRouter()
+	router.Use(correlation.AttachCorrelationIDToContext(), log.RequestLogger())
 	router.Handle(c.RootAPI+"/metrics", promhttp.Handler())
 	router.Handle(c.RootAPI+"/healthz", s.healthHandler())
 
@@ -58,13 +61,18 @@ func New(c *Config, routesProvider ...func(router *mux.Router)) *Server {
 	router.Use(log.RequestLogger())
 	router.Use(panic_recovery.NewRecoveryMiddleware())
 
+	handlerWithTimeout, err := handler.WithTimeout(router, c.RequestTimeout)
+	if err != nil {
+		log.D().Fatalf("Could not create timeout handler: %v\n", err)
+	}
+
 	for _, applyRoutes := range routesProvider {
 		applyRoutes(router)
 	}
 
 	s.Server = &http.Server{
 		Addr:    ":" + strconv.Itoa(c.Port),
-		Handler: router,
+		Handler: handlerWithTimeout,
 
 		ReadTimeout:  c.RequestTimeout,
 		WriteTimeout: c.RequestTimeout,
