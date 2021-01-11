@@ -61,22 +61,22 @@ func New(c *Config, routesProvider ...func(router *mux.Router)) *Server {
 	router.Use(log.RequestLogger())
 	router.Use(panic_recovery.NewRecoveryMiddleware())
 
-	handlerWithTimeout, err := handler.WithTimeout(router, c.RequestTimeout)
-	if err != nil {
-		log.D().Fatalf("Could not create timeout handler: %v\n", err)
-	}
-
 	for _, applyRoutes := range routesProvider {
 		applyRoutes(router)
+	}
+
+	handlerWithTimeout, err := handler.WithTimeout(router, c.Timeout)
+	if err != nil {
+		log.D().Fatalf("Could not create timeout handler: %v\n", err)
 	}
 
 	s.Server = &http.Server{
 		Addr:    ":" + strconv.Itoa(c.Port),
 		Handler: handlerWithTimeout,
 
-		ReadTimeout:  c.RequestTimeout,
-		WriteTimeout: c.RequestTimeout,
-		IdleTimeout:  c.RequestTimeout,
+		ReadTimeout:  c.Timeout,
+		WriteTimeout: c.Timeout,
+		IdleTimeout:  c.Timeout,
 	}
 
 	return s
