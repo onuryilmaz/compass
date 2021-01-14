@@ -55,7 +55,6 @@ echo "
 "
 
 bash ${CURRENT_DIR}/is-ready.sh kube-system k8s-app kube-dns
-bash ${CURRENT_DIR}/install-tiller.sh
 
 if [ $CR_PATH ]; then
 
@@ -96,5 +95,6 @@ bash ${CURRENT_DIR}/configure-components.sh
 
 echo -e "\nStarting installation!"
 kubectl apply -f - <<< "$COMBO_YAML"
+kubectl rollout restart deployment -n compass-installer compass-installer
 sleep 15
 kubectl apply -f "${CR_PATH}"
