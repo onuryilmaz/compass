@@ -45,6 +45,17 @@ type Webhook struct {
 	State             State  `json:"state"`
 }
 
+// +kubebuilder:validation:Enum=Success;Failed;Polling
+type State string
+
+type Webhook struct {
+	WebhookID         string `json:"webhook_id"`
+	RetriesCount      int32  `json:"retries_count"`
+	WebhookPollURL    string `json:"webhook_poll_url"`
+	LastPollTimestamp string `json:"last_poll_timestamp"`
+	State             State  `json:"state"`
+}
+
 // +kubebuilder:validation:Enum=Ready;Error
 type ConditionType string
 
